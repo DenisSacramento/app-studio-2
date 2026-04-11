@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "cadastro-app",
-    "slug": "cadastro-app",
+    "name": "Studio KR",
+    "slug": "studio-kr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "cadastroapp",
+    "scheme": "studiokr",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -43,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0e9949e5-2508-41d2-8385-2225ebea1cb4"
+      }
     }
   }
 }
