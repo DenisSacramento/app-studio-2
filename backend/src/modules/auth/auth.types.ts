@@ -11,3 +11,7 @@ export type AuthResult = {
   refreshToken: string;
   user: PublicUser;
 };
+
+export type PasswordResetResult = {
+  message: string;
+};

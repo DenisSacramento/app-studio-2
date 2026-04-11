@@ -10,8 +10,10 @@ import { AppError } from '../../shared/errors/app-error';
 import { asyncHandler } from '../../shared/http/async-handler';
 import {
     loginSchema,
+  forgotPasswordSchema,
     refreshTokenSchema,
     registerSchema,
+  resetPasswordSchema,
 } from './auth.schemas';
 import { authService } from './auth.service';
 
@@ -86,6 +88,44 @@ authRoutes.post('/logout', asyncHandler(async (req, res) => {
   res.status(200).json({
     message: 'Logout realizado com sucesso',
   });
+}));
+
+authRoutes.post('/forgot-password', authLimiter, asyncHandler(async (req, res) => {
+  const parsed = forgotPasswordSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    const errors = Object.fromEntries(
+      Object.entries(parsed.error.flatten().fieldErrors).map(([key, value]) => [
+        key,
+        value?.[0] ?? 'Valor inválido',
+      ])
+    );
+
+    throw new AppError('Dados inválidos', 400, errors);
+  }
+
+  const result = await authService.requestPasswordReset(parsed.data);
+
+  res.status(200).json(result);
+}));
+
+authRoutes.post('/reset-password', authLimiter, asyncHandler(async (req, res) => {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    const errors = Object.fromEntries(
+      Object.entries(parsed.error.flatten().fieldErrors).map(([key, value]) => [
+        key,
+        value?.[0] ?? 'Valor inválido',
+      ])
+    );
+
+    throw new AppError('Dados inválidos', 400, errors);
+  }
+
+  const result = await authService.resetPassword(parsed.data);
+
+  res.status(200).json(result);
 }));
 
 authRoutes.get('/profile', authMiddleware, asyncHandler(async (req, res) => {

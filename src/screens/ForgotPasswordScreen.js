@@ -1,14 +1,32 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from "react-native";
+import AuthService from '@/src/services/authService';
 import { useState } from "react";
+import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from "react-native";
 import { useRouter } from 'expo-router';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSendResetEmail() {
-    console.log("Enviar email de redefinição para:", email);
-    // Aqui você pode adicionar a lógica para enviar o email
+  async function handleSendResetEmail() {
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      Alert.alert('Atenção', 'Digite seu email para continuar.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const response = await AuthService.requestPasswordReset(normalizedEmail);
+      Alert.alert('Enviado', response.message);
+      router.push({ pathname: '/reset-password', params: { email: normalizedEmail } });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível enviar as instruções.';
+      Alert.alert('Erro', message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -42,8 +60,8 @@ export default function ForgotPasswordScreen() {
           autoCapitalize="none"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSendResetEmail}>
-          <Text style={styles.buttonText}>Enviar</Text>
+        <TouchableOpacity style={[styles.button, isSubmitting && styles.buttonDisabled]} onPress={handleSendResetEmail} disabled={isSubmitting}>
+          <Text style={styles.buttonText}>{isSubmitting ? 'Enviando...' : 'Enviar'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -120,6 +138,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     marginBottom: 16,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#fff',

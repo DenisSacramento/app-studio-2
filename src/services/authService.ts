@@ -18,6 +18,10 @@ export type AuthResponse = {
   user: PublicUser;
 };
 
+export type PasswordResetResponse = {
+  message: string;
+};
+
 export type UserProfile = {
   id: string;
   name: string;
@@ -93,6 +97,34 @@ class AuthService {
         throw error;
       }
       throw new Error('Erro ao fazer login');
+    }
+  }
+
+  static async requestPasswordReset(email: string): Promise<PasswordResetResponse> {
+    try {
+      return await apiCall<PasswordResetResponse>('/auth/forgot-password', {
+        method: 'POST',
+        body: { email },
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new Error('Erro ao solicitar redefinição de senha');
+    }
+  }
+
+  static async resetPassword(email: string, token: string, password: string): Promise<PasswordResetResponse> {
+    try {
+      return await apiCall<PasswordResetResponse>('/auth/reset-password', {
+        method: 'POST',
+        body: { email, token, password },
+      });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new Error('Erro ao redefinir senha');
     }
   }
 

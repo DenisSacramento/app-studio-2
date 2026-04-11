@@ -11,12 +11,12 @@ const passwordSchema = z
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
-  email: z.string().trim().email('Email inválido').transform((value) => value.toLowerCase()),
+  email: z.string().trim().email('Email invï¿½lido').transform((value) => value.toLowerCase()),
   password: passwordSchema,
 });
 
 export const loginSchema = z.object({
-  email: z.string().trim().email('Email inválido').transform((value) => value.toLowerCase()),
+  email: z.string().trim().email('Email invï¿½lido').transform((value) => value.toLowerCase()),
   password: z.string().min(1, 'Senha obrigatoria').max(128),
 });
 
@@ -24,6 +24,18 @@ export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token obrigatorio'),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email('Email invÃ¡lido').transform((value) => value.toLowerCase()),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().trim().email('Email invÃ¡lido').transform((value) => value.toLowerCase()),
+  token: z.string().trim().min(10, 'Token obrigatorio').max(255),
+  password: passwordSchema,
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
