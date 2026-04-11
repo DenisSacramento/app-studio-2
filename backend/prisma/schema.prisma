@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(100)
+  lastName     String?  @map("last_name") @db.VarChar(100)
+  nickname     String?  @db.VarChar(80)
+  email        String   @unique @db.VarChar(255)
+  phone        String?  @db.VarChar(25)
+  address      String?  @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         UserRole @default(CLIENT)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  refreshTokens RefreshToken[]
+  services      Service[]
+  appointments  Appointment[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
+  userId    String    @map("user_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Service {
+  id              String        @id @default(uuid()) @db.Uuid
+  name            String        @db.VarChar(120)
+  description     String?       @db.VarChar(500)
+  price           Decimal       @db.Decimal(10, 2)
+  durationMinutes Int           @map("duration_minutes")
+  isActive        Boolean       @default(true) @map("is_active")
+  userId          String        @map("user_id") @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  owner        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@index([userId, isActive])
+  @@map("services")
+}
+
+model Appointment {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  serviceId   String            @map("service_id") @db.Uuid
+  scheduledAt DateTime          @map("scheduled_at")
+  status      AppointmentStatus @default(PENDING)
+  notes       String?           @db.VarChar(500)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@index([userId, scheduledAt])
+  @@index([serviceId, scheduledAt])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELED
+}
+
+enum UserRole {
+  CLIENT
+  ADMIN
+}

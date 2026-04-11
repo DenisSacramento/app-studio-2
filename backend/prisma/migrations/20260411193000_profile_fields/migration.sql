@@ -1,0 +1,5 @@
+ALTER TABLE "users"
+ADD COLUMN "last_name" VARCHAR(100),
+ADD COLUMN "nickname" VARCHAR(80),
+ADD COLUMN "phone" VARCHAR(25),
+ADD COLUMN "address" VARCHAR(255);
