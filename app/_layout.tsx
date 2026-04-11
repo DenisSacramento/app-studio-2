@@ -19,6 +19,7 @@ export default function RootLayout() {
         <Stack.Screen name="welcome" options={{ title: 'Bem-vindo', headerShown: false }} />
         <Stack.Screen name="register-success" options={{ title: 'Cadastro Concluído', headerShown: false }} />
         <Stack.Screen name="login" options={{ title: 'Login', headerShown: false }} />
+        <Stack.Screen name="reset-password" options={{ title: 'Nova Senha', headerShown: false }} />
         <Stack.Screen name="home" options={{ title: 'Home', headerShown: false }} />
         <Stack.Screen name="services" options={{ title: 'Serviços', headerShown: false }} />
         <Stack.Screen name="appointments" options={{ title: 'Agendamentos', headerShown: false }} />
