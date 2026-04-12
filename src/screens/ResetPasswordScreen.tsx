@@ -5,8 +5,9 @@ import { Alert, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, 
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ email?: string }>();
-  const [email, setEmail] = useState(params.email ? String(params.email) : '');
+  const params = useLocalSearchParams();
+  const initialEmail = typeof (params as any)?.email === 'string' ? (params as any).email : '';
+  const [email, setEmail] = useState(initialEmail);
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

@@ -50,19 +50,21 @@ export default function AdminServicesScreen() {
       const refreshed = missingCatalog.length ? await servicesService.list() : { services: currentServices };
       const refreshedByName = new Map((refreshed.services || []).map((item) => [normalize(item.name), item]));
 
-      const orderedCatalogServices = SERVICES_CATALOG.map((catalogItem) => {
+      const orderedCatalogServices: ServiceItem[] = SERVICES_CATALOG.reduce<ServiceItem[]>((acc, catalogItem) => {
         const existing = refreshedByName.get(normalize(catalogItem.name));
         if (!existing) {
-          return null;
+          return acc;
         }
 
-        return {
+        acc.push({
           ...existing,
           name: catalogItem.name,
           description: catalogItem.description,
           durationMinutes: catalogItem.averageDurationMinutes,
-        };
-      }).filter((service): service is Service => Boolean(service));
+        });
+
+        return acc;
+      }, []);
 
       setServices(orderedCatalogServices);
     } catch (error) {
@@ -133,7 +135,7 @@ export default function AdminServicesScreen() {
           </View>
         ) : services.length === 0 ? (
           <View style={styles.centerContainer}>
-            <Ionicons name="scissors" size={48} color="#d1d5db" />
+            <Ionicons name="cut" size={48} color="#d1d5db" />
             <Text style={styles.emptyText}>Nenhum serviço do catálogo foi encontrado</Text>
           </View>
         ) : (

@@ -65,7 +65,8 @@ function ceilToNextSlot(date: Date, stepMinutes: number) {
 
 export default function AppointmentsScreen() {
   const router = useRouter();
-  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const params = useLocalSearchParams();
+  const mode = typeof (params as any)?.mode === 'string' ? (params as any).mode : undefined;
   const today = useMemo(() => new Date(), []);
   const todayDateKey = useMemo(() => formatDateKey(today), [today]);
   const [isLoading, setIsLoading] = useState(true);

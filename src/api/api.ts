@@ -22,12 +22,21 @@ function resolveApiBaseUrl(): string {
     return `http://${host}:5000/api`;
   }
 
-  // Fallback para emulador Android local.
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000/api';
+  const isDev =
+    (typeof __DEV__ !== 'undefined' && __DEV__) ||
+    process.env.NODE_ENV !== 'production';
+
+  // Fallbacks devem ser usados somente em desenvolvimento.
+  if (isDev) {
+    if (Platform.OS === 'android') {
+      return 'http://10.0.2.2:5000/api';
+    }
+
+    return 'http://localhost:5000/api';
   }
 
-  return 'http://localhost:5000/api';
+  // Em build (APK/AAB), EXPO_PUBLIC_API_URL deve ser definida no EAS.
+  throw new Error('EXPO_PUBLIC_API_URL não configurada para build de produção');
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
@@ -85,7 +94,7 @@ export async function apiCall<T>(
       try {
         data = JSON.parse(rawBody);
       } catch {
-        data = { message: 'Resposta inv�lida do servidor' };
+        data = { message: 'Resposta inv�lida do servidor' };
       }
     }
 
