@@ -1,5 +1,4 @@
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
 
 function normalizeUrl(url: string): string {
   return url.trim().replace(/\/+$/, '');
@@ -11,30 +10,16 @@ export function resolveApiBaseUrl(): string {
     return normalizeUrl(envUrl);
   }
 
-  const hostUri =
-    Constants.expoConfig?.hostUri ??
-    (Constants.manifest2 as { extra?: { expoGo?: { debuggerHost?: string } } } | null)?.extra?.expoGo
-      ?.debuggerHost ??
-    (Constants.manifest as { debuggerHost?: string } | null)?.debuggerHost;
+  const fallbackFromExpoConfig =
+    Constants.expoConfig?.extra && typeof Constants.expoConfig.extra === 'object'
+      ? (Constants.expoConfig.extra as { EXPO_PUBLIC_API_URL?: string }).EXPO_PUBLIC_API_URL
+      : undefined;
 
-  if (hostUri) {
-    const host = hostUri.split(':')[0];
-    return `http://${host}:5000/api`;
+  if (fallbackFromExpoConfig) {
+    return normalizeUrl(fallbackFromExpoConfig);
   }
 
-  const isDev =
-    (typeof __DEV__ !== 'undefined' && __DEV__) ||
-    process.env.NODE_ENV !== 'production';
-
-  if (isDev) {
-    if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:5000/api';
-    }
-
-    return 'http://localhost:5000/api';
-  }
-
-  throw new Error('EXPO_PUBLIC_API_URL not configured for production build');
+  throw new Error('EXPO_PUBLIC_API_URL not configured. Set EXPO_PUBLIC_API_URL=https://app-studio-2.onrender.com/api');
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
