@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const port = Number(process.env.PORT ?? 5000);
+const host = process.env.HOST ?? '0.0.0.0';
 
 if (Number.isNaN(port)) {
   throw new Error('PORT deve ser um numero valido');
@@ -48,6 +49,7 @@ if (Number.isNaN(resetPasswordTokenTtlMinutes) || resetPasswordTokenTtlMinutes <
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port,
+  host,
   databaseUrl,
   corsOrigins,
   jwtSecret,

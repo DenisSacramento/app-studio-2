@@ -26,14 +26,20 @@ app.use(
 			? {}
 			: {
 					origin: env.corsOrigins,
+					credentials: true,
 				}
 	)
 );
 app.use(express.json());
+
+app.get('/health', (_req, res) => {
+	res.status(200).json({ status: 'ok' });
+});
+
 app.use('/api', routes);
 
 app.use((_req, _res, next) => {
-	next(new AppError('Rota não encontrada', 404));
+	next(new AppError('Rota nï¿½o encontrada', 404));
 });
 
 app.use(errorHandler);

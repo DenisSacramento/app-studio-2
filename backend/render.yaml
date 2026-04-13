@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: app-studio-2-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci ; npm run build ; npx prisma generate
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: JWT_EXPIRES_IN
+        value: 1d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: BCRYPT_ROUNDS
+        value: 10
+      - key: RESET_PASSWORD_TOKEN_TTL_MINUTES
+        value: 20

@@ -11,11 +11,14 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.72:5000/api"
+        "EXPO_PUBLIC_API_URL": "https://SEU_BACKEND_PUBLICO.onrender.com/api"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://SEU_BACKEND_PUBLICO.onrender.com/api"
+      }
     }
   },
   "submit": {
