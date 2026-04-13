@@ -17,8 +17,10 @@ No serviço web criado no Render, em Environment, configure:
 
 Exemplo de `CORS_ORIGINS` para app Expo/web:
 
-- `*` (mais permissivo, simples para iniciar)
+- `https://seu-dominio.com`
 - ou lista separada por vírgula, por exemplo: `https://seu-dominio.com,https://app.expo.dev`
+
+Em producao, nao use `*`.
 
 ## 3) Obter URL pública
 

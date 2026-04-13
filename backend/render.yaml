@@ -24,3 +24,5 @@ services:
         value: 10
       - key: RESET_PASSWORD_TOKEN_TTL_MINUTES
         value: 20
+      - key: CORS_ORIGINS
+        value: https://SEU_FRONTEND_PUBLICO.com,https://app.expo.dev

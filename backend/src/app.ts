@@ -23,7 +23,10 @@ app.use(
 app.use(
 	cors(
 		isWildcardCors
-			? {}
+			? {
+					origin: true,
+					credentials: true,
+				}
 			: {
 					origin: env.corsOrigins,
 					credentials: true,

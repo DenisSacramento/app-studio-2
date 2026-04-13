@@ -4,6 +4,7 @@ dotenv.config();
 
 const port = Number(process.env.PORT ?? 5000);
 const host = process.env.HOST ?? '0.0.0.0';
+const nodeEnv = process.env.NODE_ENV ?? 'development';
 
 if (Number.isNaN(port)) {
   throw new Error('PORT deve ser um numero valido');
@@ -28,10 +29,20 @@ if (Number.isNaN(bcryptRounds) || bcryptRounds < 8) {
   throw new Error('BCRYPT_ROUNDS deve ser um numero maior ou igual a 8');
 }
 
-const corsOrigins = (process.env.CORS_ORIGINS ?? '*')
+const corsOrigins = (process.env.CORS_ORIGINS ?? (nodeEnv === 'production' ? '' : '*'))
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+if (nodeEnv === 'production') {
+  if (corsOrigins.length === 0) {
+    throw new Error('CORS_ORIGINS deve ser definido em producao');
+  }
+
+  if (corsOrigins.includes('*')) {
+    throw new Error('CORS_ORIGINS nao pode usar * em producao');
+  }
+}
 
 const smtpPortRaw = process.env.SMTP_PORT;
 const smtpPort = smtpPortRaw ? Number(smtpPortRaw) : null;
@@ -47,7 +58,7 @@ if (Number.isNaN(resetPasswordTokenTtlMinutes) || resetPasswordTokenTtlMinutes <
 }
 
 export const env = {
-  nodeEnv: process.env.NODE_ENV ?? 'development',
+  nodeEnv,
   port,
   host,
   databaseUrl,
