@@ -99,14 +99,17 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error('❌ Erro no login:', error);
-      
-      if (error.errors) {
+
+      const backendErrors = error && typeof error === 'object' ? error.errors : null;
+      const backendMessage = error && typeof error === 'object' ? error.message : null;
+
+      if (backendErrors) {
         setErrors(prev => ({
           ...prev,
-          ...error.errors
+          ...backendErrors
         }));
       } else {
-        Alert.alert('Erro', error.message || 'Erro ao fazer login');
+        Alert.alert('Erro', backendMessage || 'Erro ao fazer login');
       }
     } finally {
       setIsLoading(false);

@@ -1,7 +1,10 @@
 import Constants from 'expo-constants';
 
 function normalizeUrl(url: string): string {
-  return url.trim().replace(/\/+$/, '');
+  const withoutTrailingSlash = url.trim().replace(/\/+$/, '');
+  return withoutTrailingSlash.endsWith('/api')
+    ? withoutTrailingSlash
+    : `${withoutTrailingSlash}/api`;
 }
 
 export function resolveApiBaseUrl(): string {
@@ -19,7 +22,7 @@ export function resolveApiBaseUrl(): string {
     return normalizeUrl(fallbackFromExpoConfig);
   }
 
-  throw new Error('EXPO_PUBLIC_API_URL not configured. Set EXPO_PUBLIC_API_URL=https://app-studio-2.onrender.com/api');
+  return 'https://app-studio-2.onrender.com/api';
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();

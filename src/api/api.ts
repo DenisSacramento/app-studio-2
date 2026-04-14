@@ -40,7 +40,7 @@ export async function apiCall<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  console.log(`📡 ${method} ${endpoint} (${API_BASE_URL})`);
+  console.log(`📡 ${method} ${url}`);
 
   try {
     const response = await fetch(url, {
@@ -56,14 +56,21 @@ export async function apiCall<T>(
       try {
         data = JSON.parse(rawBody);
       } catch {
-        data = { message: 'Resposta inv�lida do servidor' };
+        data = { message: 'Resposta invalida do servidor' };
       }
     }
 
     if (!response.ok) {
       console.error(`❌ Erro ${response.status}:`, data);
+      const serverMessage =
+        typeof data?.message === 'string'
+          ? data.message
+          : typeof data?.error === 'string'
+            ? data.error
+            : `Erro na requisicao (${response.status})`;
+
       throw new ApiError(
-        data.message || 'Erro na requisição',
+        serverMessage,
         response.status,
         data.errors
       );
@@ -78,7 +85,7 @@ export async function apiCall<T>(
 
     console.error('❌ Erro de conexão:', error);
     throw new ApiError(
-      'Erro ao conectar com o servidor',
+      `Erro ao conectar com o servidor (${API_BASE_URL}). Verifique internet e URL da API.`,
       0
     );
   }

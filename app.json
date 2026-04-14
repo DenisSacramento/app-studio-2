@@ -55,6 +55,7 @@
     },
     "extra": {
       "router": {},
+      "EXPO_PUBLIC_API_URL": "https://app-studio-2.onrender.com/api",
       "eas": {
         "projectId": "0e9949e5-2508-41d2-8385-2225ebea1cb4"
       }

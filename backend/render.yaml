@@ -4,18 +4,16 @@ services:
     runtime: node
     rootDir: backend
     plan: free
-    buildCommand: npm ci ; npm run build ; npx prisma generate
-    startCommand: npm run start
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && node dist/server.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
       - key: HOST
         value: 0.0.0.0
-      - key: PORT
-        value: 10000
       - key: CORS_ORIGINS
-        value: "*"
+        value: https://app-studio-2.onrender.com,https://app.expo.dev
       - key: JWT_EXPIRES_IN
         value: 1d
       - key: JWT_REFRESH_EXPIRES_IN
@@ -24,5 +22,3 @@ services:
         value: 10
       - key: RESET_PASSWORD_TOKEN_TTL_MINUTES
         value: 20
-      - key: CORS_ORIGINS
-        value: https://SEU_FRONTEND_PUBLICO.com,https://app.expo.dev

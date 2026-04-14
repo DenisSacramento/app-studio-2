@@ -2,17 +2,17 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
 import {
-    AuthenticatedRequest,
-    authMiddleware,
+  AuthenticatedRequest,
+  authMiddleware,
 } from '../../middlewares/auth.middleware';
 import { prisma } from '../../shared/database/prisma';
 import { AppError } from '../../shared/errors/app-error';
 import { asyncHandler } from '../../shared/http/async-handler';
 import {
-    loginSchema,
   forgotPasswordSchema,
-    refreshTokenSchema,
-    registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  registerSchema,
   resetPasswordSchema,
 } from './auth.schemas';
 import { authService } from './auth.service';
@@ -46,6 +46,11 @@ authRoutes.post('/register', authLimiter, asyncHandler(async (req, res) => {
 }));
 
 authRoutes.post('/login', authLimiter, asyncHandler(async (req, res) => {
+  console.log('[auth:login] tentativa recebida', {
+    email: req.body?.email,
+    hasPassword: Boolean(req.body?.password),
+  });
+
   const parsed = loginSchema.safeParse(req.body);
 
   if (!parsed.success) {
@@ -59,9 +64,28 @@ authRoutes.post('/login', authLimiter, asyncHandler(async (req, res) => {
     throw new AppError('Dados de login inv�lidos', 400, errors);
   }
 
-  const result = await authService.login(parsed.data);
+  try {
+    const result = await authService.login(parsed.data);
 
-  res.status(200).json(result);
+    console.log('[auth:login] sucesso', {
+      userId: result.user.id,
+      email: result.user.email,
+      role: result.user.role,
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    if (error instanceof AppError && error.message === 'Credenciais inválidas') {
+      console.warn('[auth:login] credenciais inválidas', {
+        email: parsed.data.email,
+      });
+
+      res.status(400).json({ error: 'Credenciais inválidas' });
+      return;
+    }
+
+    throw error;
+  }
 }));
 
 authRoutes.post('/refresh', authLimiter, asyncHandler(async (req, res) => {

@@ -26,21 +26,32 @@ Em producao, nao use `*`.
 
 Após deploy, copie a URL do serviço no Render, por exemplo:
 
-- `https://app-studio-2-backend.onrender.com`
+- `https://app-studio-2.onrender.com`
 
 Sua API base fica:
 
-- `https://app-studio-2-backend.onrender.com/api`
+- `https://app-studio-2.onrender.com/api`
 
 ## 4) Colar URL no app Expo
 
 Atualize os locais abaixo com sua URL final:
 
 1. `.env` (na raiz do projeto mobile):
-   - `EXPO_PUBLIC_API_URL=https://app-studio-2-backend.onrender.com/api`
+   - `EXPO_PUBLIC_API_URL=https://app-studio-2.onrender.com/api`
 2. `eas.json`:
    - `build.preview.env.EXPO_PUBLIC_API_URL`
    - `build.production.env.EXPO_PUBLIC_API_URL`
+
+## 4.1) Rodar migracoes no banco de producao
+
+No Render Shell do backend, execute:
+
+- `npx prisma migrate deploy`
+
+Em seguida, reinicie o servico e confira:
+
+- `GET /health`
+- `GET /api/health`
 
 ## 5) Build do APK/AAB
 

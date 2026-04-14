@@ -12,8 +12,60 @@ import { ForgotPasswordInput, LoginInput, RegisterInput, ResetPasswordInput } fr
 import { AuthResult, PasswordResetResult } from './auth.types';
 
 class AuthService {
+  private readonly operationalPrismaErrorCodes = new Set([
+    'P1000',
+    'P1001',
+    'P1002',
+    'P1003',
+    'P2021',
+    'P2022',
+  ]);
+
+  private readonly authUserSelect = {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    passwordHash: true,
+  } as const;
+
+  private readonly loginUserSelect = {
+    id: true,
+    email: true,
+    passwordHash: true,
+  } as const;
+
+  private toPublicUser(user: {
+    id: string;
+    name: string;
+    email: string;
+    role: 'CLIENT' | 'ADMIN';
+  }) {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+  }
+
   private hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
+  }
+
+  private isOperationalPrismaError(error: unknown): boolean {
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      return true;
+    }
+
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      return true;
+    }
+
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      this.operationalPrismaErrorCodes.has(error.code)
+    );
   }
 
   private createAccessToken(userId: string, email: string): string {
@@ -56,7 +108,21 @@ class AuthService {
     const token = this.createAccessToken(userId, email);
     const refreshToken = this.createRefreshToken(userId);
 
-    await this.persistRefreshToken(userId, refreshToken);
+    try {
+      await this.persistRefreshToken(userId, refreshToken);
+    } catch (error) {
+      if (this.isOperationalPrismaError(error)) {
+        console.warn('[auth:tokens:refresh:persistence:fallback]', {
+          userId,
+          email,
+          error,
+        });
+
+        return { token, refreshToken };
+      }
+
+      throw error;
+    }
 
     return { token, refreshToken };
   }
@@ -168,6 +234,7 @@ class AuthService {
           email: data.email,
           passwordHash,
         },
+        select: this.authUserSelect,
       });
 
       const tokens = await this.issueAuthTokens(user.id, user.email);
@@ -176,12 +243,7 @@ class AuthService {
         message: 'Usuário cadastrado com sucesso',
         token: tokens.token,
         refreshToken: tokens.refreshToken,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
+        user: this.toPublicUser(user),
       };
     } catch (error) {
       if (
@@ -193,38 +255,95 @@ class AuthService {
         });
       }
 
+      if (this.isOperationalPrismaError(error)) {
+        console.error('[auth:register:database:error]', {
+          email: data.email,
+          error,
+        });
+
+        throw new AppError('Serviço de autenticação temporariamente indisponível', 503);
+      }
+
       throw error;
     }
   }
 
   async login(data: LoginInput): Promise<AuthResult> {
-    const user = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: data.email },
+        // Keep login query minimal to avoid breaking if optional profile fields are missing in DB.
+        select: this.loginUserSelect,
+      });
 
-    if (!user) {
-      throw new AppError('Credenciais inv�lidas', 401);
+      if (!user) {
+        throw new AppError('Credenciais inválidas', 400);
+      }
+
+      const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
+
+      if (!isPasswordValid) {
+        throw new AppError('Credenciais inválidas', 400);
+      }
+
+      const tokens = await this.issueAuthTokens(user.id, user.email);
+
+      let publicUser: { id: string; name: string; email: string; role: 'CLIENT' | 'ADMIN' };
+
+      try {
+        const profile = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        });
+
+        if (profile) {
+          publicUser = profile;
+        } else {
+          publicUser = {
+            id: user.id,
+            name: user.email.split('@')[0],
+            email: user.email,
+            role: 'CLIENT',
+          };
+        }
+      } catch (profileError) {
+        console.warn('[auth:login:profile:fallback]', {
+          userId: user.id,
+          email: user.email,
+          profileError,
+        });
+
+        publicUser = {
+          id: user.id,
+          name: user.email.split('@')[0],
+          email: user.email,
+          role: 'CLIENT',
+        };
+      }
+
+      return {
+        message: 'Login realizado com sucesso',
+        token: tokens.token,
+        refreshToken: tokens.refreshToken,
+        user: this.toPublicUser(publicUser),
+      };
+    } catch (error) {
+      console.error('[auth:login:error]', {
+        email: data.email,
+        error,
+      });
+
+      if (this.isOperationalPrismaError(error)) {
+        throw new AppError('Serviço de autenticação temporariamente indisponível', 503);
+      }
+
+      throw error;
     }
-
-    const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
-
-    if (!isPasswordValid) {
-      throw new AppError('Credenciais inv�lidas', 401);
-    }
-
-    const tokens = await this.issueAuthTokens(user.id, user.email);
-
-    return {
-      message: 'Login realizado com sucesso',
-      token: tokens.token,
-      refreshToken: tokens.refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    };
   }
 
   async refreshSession(refreshToken: string): Promise<{ message: string; token: string; refreshToken: string }> {
@@ -242,17 +361,32 @@ class AuthService {
 
     const storedToken = await prisma.refreshToken.findUnique({
       where: { tokenHash: this.hashToken(refreshToken) },
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
     });
 
     if (!storedToken || storedToken.revokedAt || storedToken.expiresAt < new Date()) {
       throw new AppError('Refresh token inv�lido', 401);
     }
 
-    await prisma.refreshToken.update({
-      where: { id: storedToken.id },
-      data: { revokedAt: new Date() },
-    });
+    try {
+      await prisma.refreshToken.update({
+        where: { id: storedToken.id },
+        data: { revokedAt: new Date() },
+      });
+    } catch (error) {
+      if (this.isOperationalPrismaError(error)) {
+        throw new AppError('Serviço de autenticação temporariamente indisponível', 503);
+      }
+
+      throw error;
+    }
 
     const tokens = await this.issueAuthTokens(storedToken.user.id, storedToken.user.email);
 
@@ -266,15 +400,23 @@ class AuthService {
   async revokeRefreshToken(refreshToken: string): Promise<void> {
     const tokenHash = this.hashToken(refreshToken);
 
-    await prisma.refreshToken.updateMany({
-      where: {
-        tokenHash,
-        revokedAt: null,
-      },
-      data: {
-        revokedAt: new Date(),
-      },
-    });
+    try {
+      await prisma.refreshToken.updateMany({
+        where: {
+          tokenHash,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      if (this.isOperationalPrismaError(error)) {
+        throw new AppError('Serviço de autenticação temporariamente indisponível', 503);
+      }
+
+      throw error;
+    }
   }
 }
 

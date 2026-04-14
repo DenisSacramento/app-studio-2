@@ -10,6 +10,18 @@ import { errorHandler } from './shared/http/error-handler';
 export const app = express();
 
 const isWildcardCors = env.corsOrigins.includes('*');
+const corsOriginPatterns = env.corsOrigins
+	.filter((origin) => origin.includes('*') && origin !== '*')
+	.map((origin) => {
+		const escaped = origin
+			.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+			.replace(/\*/g, '.*');
+
+		return new RegExp(`^${escaped}$`);
+	});
+const corsExplicitOrigins = env.corsOrigins.filter(
+	(origin) => !origin.includes('*')
+);
 
 app.use(helmet());
 app.use(
@@ -28,7 +40,24 @@ app.use(
 					credentials: true,
 				}
 			: {
-					origin: env.corsOrigins,
+					origin: (origin, callback) => {
+						if (!origin) {
+							callback(null, true);
+							return;
+						}
+
+						const isExplicitMatch = corsExplicitOrigins.includes(origin);
+						const isPatternMatch = corsOriginPatterns.some((pattern) =>
+							pattern.test(origin)
+						);
+
+						if (isExplicitMatch || isPatternMatch) {
+							callback(null, true);
+							return;
+						}
+
+						callback(new Error(`CORS bloqueado para origem: ${origin}`));
+					},
 					credentials: true,
 				}
 	)

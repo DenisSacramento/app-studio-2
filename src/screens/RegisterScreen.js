@@ -63,16 +63,19 @@ export default function RegisterScreen() {
       });
     } catch (error) {
       console.error('❌ Erro no registro:', error);
-      
-      if (error.errors) {
+
+      const backendErrors = error && typeof error === 'object' ? error.errors : null;
+      const backendMessage = error && typeof error === 'object' ? error.message : null;
+
+      if (backendErrors) {
         // Erros de validação do backend
         setErrors(prev => ({
           ...prev,
-          ...error.errors
+          ...backendErrors
         }));
       } else {
         // Erro geral
-        Alert.alert('Erro', error.message || 'Erro ao registrar usuário');
+        Alert.alert('Erro', backendMessage || 'Erro ao registrar usuário');
       }
     } finally {
       setIsLoading(false);
