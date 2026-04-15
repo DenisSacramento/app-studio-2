@@ -172,12 +172,21 @@ export default function AppointmentsScreen() {
 
   const loadAppointments = useCallback(async () => {
     const response = await appointmentsService.list();
-    setAppointments(response.appointments);
+    console.log('APPOINTMENTS RESPONSE:', response);
+    console.log(
+      'APPOINTMENTS COUNT:',
+      Array.isArray(response.appointments) ? response.appointments.length : 'invalid'
+    );
+
+    setAppointments(Array.isArray(response.appointments) ? response.appointments : []);
   }, []);
 
   const loadServices = useCallback(async () => {
     const response = await servicesService.list();
+    console.log('SERVICES RESPONSE:', response);
+
     const activeServices = response.services.filter((service) => service.isActive);
+    console.log('ACTIVE SERVICES COUNT:', activeServices.length);
 
     const refreshedByName = new Map(activeServices.map((item) => [normalize(item.name), item]));
 
@@ -195,7 +204,7 @@ export default function AppointmentsScreen() {
       };
     }).filter((service): service is NonNullable<typeof service> => Boolean(service));
 
-    setServices(orderedServices);
+    setServices(orderedServices.length ? orderedServices : activeServices);
   }, []);
 
   const loadData = useCallback(async () => {

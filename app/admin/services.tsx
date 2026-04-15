@@ -31,6 +31,8 @@ export default function AdminServicesScreen() {
       setIsLoading(true);
       const response = await servicesService.list();
       const currentServices = response.services || [];
+      console.log('ADMIN SERVICES RESPONSE:', response);
+      console.log('ADMIN SERVICES COUNT:', currentServices.length);
 
       // Garante que o catálogo oficial exista no backend para manter admin e cliente sincronizados.
       const byName = new Map(currentServices.map((item) => [normalize(item.name), item]));
@@ -66,7 +68,7 @@ export default function AdminServicesScreen() {
         return acc;
       }, []);
 
-      setServices(orderedCatalogServices);
+      setServices(orderedCatalogServices.length ? orderedCatalogServices : currentServices);
     } catch (error) {
       console.error('❌ Erro ao carregar serviços:', error);
       Alert.alert('Erro', 'Não foi possível carregar os serviços.');

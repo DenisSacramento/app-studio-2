@@ -65,6 +65,11 @@ export default function AdminAppointmentsScreen() {
     try {
       setIsLoading(true);
       const response = await appointmentsService.list();
+      console.log('ADMIN APPOINTMENTS RESPONSE:', response);
+      console.log(
+        'ADMIN APPOINTMENTS COUNT:',
+        Array.isArray(response.appointments) ? response.appointments.length : 'invalid'
+      );
 
       const allAppointments = (response.appointments || []) as Appointment[];
       const selectedDay = startOfDay(selectedDate);
@@ -73,8 +78,7 @@ export default function AdminAppointmentsScreen() {
         const appointmentDate = new Date(appointment.scheduledAt);
 
         if (filter === 'ALL') {
-          // "Todos": mostra agendamentos do mês do dia selecionado.
-          return isSameMonth(appointmentDate, selectedDay);
+          return true;
         }
 
         if (filter === 'PENDING') {

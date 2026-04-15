@@ -67,8 +67,15 @@ export default function ServicesScreen() {
     try {
       setIsLoading(true);
       const response = await servicesService.list();
-      setServices(response.services);
+      console.log('SERVICES RESPONSE:', response);
+      console.log(
+        'SERVICES COUNT:',
+        Array.isArray(response.services) ? response.services.length : 'invalid'
+      );
+
+      setServices(Array.isArray(response.services) ? response.services : []);
     } catch (error: any) {
+      console.error('SERVICES LOAD ERROR:', error);
       Alert.alert('Erro', error?.message ?? 'Falha ao carregar serviços');
     } finally {
       setIsLoading(false);
