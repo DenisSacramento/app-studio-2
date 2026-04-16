@@ -27,9 +27,20 @@ class EmailService {
     });
   }
 
+  private buildResetUrl(email: string, token: string) {
+    if (!env.resetPasswordUrl) {
+      return null;
+    }
+
+    const separator = env.resetPasswordUrl.includes('?') ? '&' : '?';
+    return `${env.resetPasswordUrl}${separator}email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+  }
+
   async sendPasswordResetInstructions(input: PasswordResetEmailInput): Promise<void> {
     const from = env.smtpFrom;
     const subject = 'Instruções para redefinir sua senha';
+    const resetUrl = this.buildResetUrl(input.to, input.token);
+
     const text = [
       `Olá, ${input.name}.`,
       '',
@@ -38,6 +49,7 @@ class EmailService {
       '',
       input.token,
       '',
+      ...(resetUrl ? [`Ou acesse este link para abrir a tela de redefinição:`, resetUrl, ''] : []),
       'Se você não solicitou essa alteração, ignore este email.',
     ].join('\n');
 
@@ -48,6 +60,7 @@ class EmailService {
         <p>Recebemos uma solicitação para redefinir sua senha.</p>
         <p>Use o código abaixo no app. Ele expira em <strong>${input.expiresInMinutes} minutos</strong>:</p>
         <div style="font-size: 20px; font-weight: 700; letter-spacing: 1px; padding: 16px; background: #fdf2f8; border: 1px solid #f9a8d4; display: inline-block; border-radius: 10px; margin: 12px 0;">${input.token}</div>
+        ${resetUrl ? `<p><a href="${resetUrl}" style="color:#a21caf;font-weight:600;">Abrir página de redefinição</a></p>` : ''}
         <p>Se você não solicitou essa alteração, ignore este email.</p>
       </div>
     `;

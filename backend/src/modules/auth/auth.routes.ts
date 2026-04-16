@@ -80,7 +80,7 @@ authRoutes.post('/login', authLimiter, asyncHandler(async (req, res) => {
         email: parsed.data.email,
       });
 
-      res.status(400).json({ error: 'Credenciais inválidas' });
+      res.status(400).json({ message: 'Credenciais inválidas', errors: { email: 'Email ou senha inválidos', password: 'Email ou senha inválidos' } });
       return;
     }
 
