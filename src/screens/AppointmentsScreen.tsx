@@ -185,7 +185,8 @@ export default function AppointmentsScreen() {
     const response = await servicesService.list();
     console.log('SERVICES RESPONSE:', response);
 
-    const activeServices = response.services.filter((service) => service.isActive);
+    const listedServices = Array.isArray(response.services) ? response.services : [];
+    const activeServices = listedServices.filter((service) => service.isActive);
     console.log('ACTIVE SERVICES COUNT:', activeServices.length);
 
     const refreshedByName = new Map(activeServices.map((item) => [normalize(item.name), item]));

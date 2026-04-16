@@ -38,9 +38,11 @@ export default function LoginScreen() {
   function validateForm() {
     const newErrors = { email: "", password: "" };
 
-    if (!email.trim()) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
       newErrors.email = VALIDATION.MESSAGES.EMPTY_EMAIL;
-    } else if (!VALIDATION.EMAIL_REGEX.test(email.trim())) {
+    } else if (!VALIDATION.EMAIL_REGEX.test(normalizedEmail)) {
       newErrors.email = VALIDATION.MESSAGES.INVALID_EMAIL;
     }
 
@@ -64,7 +66,9 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       console.log('🔐 Iniciando login...');
-      const response = await AuthService.login(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPassword = password;
+      const response = await AuthService.login(normalizedEmail, normalizedPassword);
       console.log('✅ Login bem-sucedido:', response.user.name);
       console.log('👤 Role do usuário:', response.user.role);
       

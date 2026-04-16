@@ -17,13 +17,28 @@ class ServicesService {
     const token = await AuthService.getValidToken();
 
     if (!token) {
-      throw new Error('Sess„o expirada');
+      throw new Error('Sess√£o expirada');
     }
 
-    return apiCall<{ message: string; services: ServiceItem[] }>('/services', {
+    const response = await apiCall<{
+      message?: string;
+      services?: ServiceItem[];
+      data?: { services?: ServiceItem[] };
+    }>('/services', {
       method: 'GET',
       token,
     });
+
+    const parsedServices = Array.isArray(response.services)
+      ? response.services
+      : Array.isArray(response.data?.services)
+        ? response.data.services
+        : [];
+
+    return {
+      ...response,
+      services: parsedServices,
+    };
   }
 
   async create(data: {
@@ -35,7 +50,7 @@ class ServicesService {
     const token = await AuthService.getValidToken();
 
     if (!token) {
-      throw new Error('Sess„o expirada');
+      throw new Error('Sess√£o expirada');
     }
 
     return apiCall<{ message: string; service: ServiceItem }>('/services', {
@@ -58,7 +73,7 @@ class ServicesService {
     const token = await AuthService.getValidToken();
 
     if (!token) {
-      throw new Error('Sess„o expirada');
+      throw new Error('Sess√£o expirada');
     }
 
     return apiCall<{ message: string; service: ServiceItem }>(`/services/${serviceId}`, {
@@ -72,7 +87,7 @@ class ServicesService {
     const token = await AuthService.getValidToken();
 
     if (!token) {
-      throw new Error('Sess„o expirada');
+      throw new Error('Sess√£o expirada');
     }
 
     return apiCall<{ message: string }>(`/services/${serviceId}`, {

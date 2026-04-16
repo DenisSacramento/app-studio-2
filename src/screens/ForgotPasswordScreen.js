@@ -1,18 +1,24 @@
+import { VALIDATION } from '@/constants/validation';
 import AuthService from '@/src/services/authService';
-import { useState } from "react";
-import { Alert, View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground } from "react-native";
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSendResetEmail() {
-    const normalizedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail) {
       Alert.alert('Atenção', 'Digite seu email para continuar.');
+      return;
+    }
+
+    if (!VALIDATION.EMAIL_REGEX.test(normalizedEmail)) {
+      Alert.alert('Atenção', 'Informe um email válido.');
       return;
     }
 
@@ -105,9 +111,6 @@ const styles = StyleSheet.create({
     color: '#A91E63',
   },
   brandBold: {
-    color: '#A91E63',
-  },
-  brandAccent: {
     color: '#A91E63',
   },
   title: {

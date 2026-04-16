@@ -1,3 +1,4 @@
+import { VALIDATION } from '@/constants/validation';
 import AuthService from '@/src/services/authService';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -7,17 +8,28 @@ export default function ResetPasswordScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const initialEmail = typeof (params as any)?.email === 'string' ? (params as any).email : '';
+  const initialToken = typeof (params as any)?.token === 'string' ? (params as any).token : '';
   const [email, setEmail] = useState(initialEmail);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState(initialToken);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleResetPassword() {
-    const normalizedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !token.trim() || !password || !confirmPassword) {
       Alert.alert('Atenção', 'Preencha todos os campos.');
+      return;
+    }
+
+    if (!VALIDATION.EMAIL_REGEX.test(normalizedEmail)) {
+      Alert.alert('Atenção', 'Informe um email válido.');
+      return;
+    }
+
+    if (password.length < VALIDATION.PASSWORD_MIN_LENGTH) {
+      Alert.alert('Atenção', `A senha precisa ter no mínimo ${VALIDATION.PASSWORD_MIN_LENGTH} caracteres.`);
       return;
     }
 
@@ -68,6 +80,7 @@ export default function ResetPasswordScreen() {
           value={token}
           onChangeText={setToken}
           autoCapitalize="none"
+          editable={!initialToken}
         />
 
         <TextInput

@@ -29,20 +29,35 @@ class AppointmentsService {
     const token = await AuthService.getValidToken();
 
     if (!token) {
-      throw new Error('Sess�o expirada');
+      throw new Error('Sessão expirada');
     }
 
-    return apiCall<{ message: string; appointments: AppointmentItem[] }>('/appointments', {
+    const response = await apiCall<{
+      message?: string;
+      appointments?: AppointmentItem[];
+      data?: { appointments?: AppointmentItem[] };
+    }>('/appointments', {
       method: 'GET',
       token,
     });
+
+    const parsedAppointments = Array.isArray(response.appointments)
+      ? response.appointments
+      : Array.isArray(response.data?.appointments)
+        ? response.data.appointments
+        : [];
+
+    return {
+      ...response,
+      appointments: parsedAppointments,
+    };
   }
 
   async create(data: { serviceId: string; scheduledAt: string; notes?: string }) {
     const token = await AuthService.getValidToken();
 
     if (!token) {
-      throw new Error('Sess�o expirada');
+      throw new Error('Sessão expirada');
     }
 
     return apiCall<{ message: string; appointment: AppointmentItem }>('/appointments', {
